@@ -1,0 +1,349 @@
+{
+    "openapi": "3.0.2",
+    "info": {
+        "title": "WPDA API",
+        "description": "OpenAPI for GSJA Application",
+        "version": "1.0",
+        "contact": {
+            "name": "Rivaldo Siregar",
+            "email": "rvldsiregar@gmail.com"
+        }
+    },
+    "servers": [{ "url": "http://localhost:8000" }],
+    "components": {
+        "securitySchemes": {
+            "TodoListAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-API-KEY",
+                "description": "Authentication for todoList RESTful API"
+            }
+        },
+        "schemas": {
+            "wpda": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "reading_book": {
+                        "type": "string"
+                    },
+                    "verse_content": {
+                        "type": "string"
+                    },
+                    "message_of_god": {
+                        "type": "string"
+                    },
+                    "application_in_life": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "paths": {
+        "/api/wpda": {
+            "get": {
+                "tags": ["WPDA"],
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header"
+                    }
+                ],
+                "description": "Get WPDA user",
+                "responses": {
+                    "400": {
+                        "description": "Failed to get data WPDA",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "WPDA": {
+                                        "value": {
+                                            "success": "false",
+                                            "data": {
+                                                "message": "Failed to read data"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Success to read WPDA",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "WPDA": {
+                                        "description": "Succes read WPDA",
+                                        "value": {
+                                            "success": "true",
+                                            "data": [
+                                                {
+                                                    "id": "1",
+                                                    "reading_book": "Amsal 1 : 7",
+                                                    "verse_content": "Takut akan Tuhan adalah permulaan pengetahuan, tetapi orang bodoh menghina hikmat dan didikan.",
+                                                    "message_of_god": "Taati Tuhan",
+                                                    "application_in_life": "Saya mau menaati setiap perintah Tuhan"
+                                                },
+                                                {
+                                                    "id": "2",
+                                                    "reading_book": "Amsal 1 : 7",
+                                                    "verse_content": "Takut akan Tuhan adalah permulaan pengetahuan, tetapi orang bodoh menghina hikmat dan didikan.",
+                                                    "message_of_god": "Taati Tuhan",
+                                                    "application_in_life": "Saya mau menaati setiap perintah Tuhan"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                "schema": {
+                                    "$ref": "#/components/schemas/wpda"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": ["WPDA"],
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header"
+                    }
+                ],
+                "description": "Create WPDA",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "WPDA": {
+                                    "description": "Create WPDA",
+                                    "value": {
+                                        "reading_book": "Amsal 1 : 7",
+                                        "verse_content": "Takut akan Tuhan adalah permulaan pengetahuan, tetapi orang bodoh menghina hikmat dan didikan.",
+                                        "message_of_god": "Taati Tuhan",
+                                        "application_in_life": "Saya mau menaati setiap perintah Tuhan"
+                                    }
+                                }
+                            },
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reading_book": {
+                                        "type": "string"
+                                    },
+                                    "verse_content": {
+                                        "type": "string"
+                                    },
+                                    "message_of_god": {
+                                        "type": "string"
+                                    },
+                                    "application_in_life": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "400": {
+                        "description": "Failed to create WPDA",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "WPDA": {
+                                        "description": "Validation error",
+                                        "value": {
+                                            "success": "false",
+                                            "data": [
+                                                {
+                                                    "reading_book": "Reading book must not be blank",
+                                                    "verse_content": "Verse content must not be blank",
+                                                    "message_of_god": "Message of God must not be blank",
+                                                    "application_in_life": "Application in life must not be blank"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Success create WPDA",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/wpda"
+                                },
+                                "examples": {
+                                    "WPDA": {
+                                        "summary": "WPDA",
+                                        "value": {
+                                            "success": "true",
+                                            "data": {
+                                                "id": "1",
+                                                "reading_book": "Amsal 1 : 7",
+                                                "verse_content": "Takut akan Tuhan adalah permulaan pengetahuan, tetapi orang bodoh menghina hikmat dan didikan.",
+                                                "message_of_god": "Taati Tuhan",
+                                                "application_in_life": "Saya mau menaati setiap perintah Tuhan"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/wpda/{id}": {
+            "put": {
+                "tags": ["WPDA"],
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header"
+                    }
+                ],
+                "description": "Update WPDA user",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reading_book": {
+                                        "type": "string"
+                                    },
+                                    "verse_content": {
+                                        "type": "string"
+                                    },
+                                    "message_of_god": {
+                                        "type": "string"
+                                    },
+                                    "application_in_life": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "WPDA": {
+                                    "description": "Success update WPDA",
+                                    "summary": "WPDA",
+                                    "value": {
+                                        "reading_book": "Amsal 1 : 7",
+                                        "verse_content": "Takut akan Tuhan adalah permulaan pengetahuan, tetapi orang bodoh menghina hikmat dan didikan.",
+                                        "message_of_god": "Taati Tuhan",
+                                        "application_in_life": "Saya mau menaati setiap perintah Tuhan"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "400": {
+                        "description": "Failed to update WPDA",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "WPDA": {
+                                        "description": "Validation error",
+                                        "value": {
+                                            "success": "false",
+                                            "data": [
+                                                {
+                                                    "reading_book": "Reading book must not be blank",
+                                                    "verse_content": "Verse content must not be blank",
+                                                    "message_of_god": "Message of God must not be blank",
+                                                    "application_in_life": "Application in life must not be blank"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Success update WPDA",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "WPDA": {
+                                        "description": "Update WPDA",
+                                        "value": {
+                                            "success": "true",
+                                            "data": {
+                                                "id": "1",
+                                                "reading_book": "Amsal 1 : 7",
+                                                "verse_content": "Takut akan Tuhan adalah permulaan pengetahuan, tetapi orang bodoh menghina hikmat dan didikan.",
+                                                "message_of_god": "Taati Tuhan",
+                                                "application_in_life": "Saya mau menaati setiap perintah Tuhan"
+                                            }
+                                        }
+                                    }
+                                },
+                                "schema": {
+                                    "$ref": "#/components/schemas/wpda"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["WPDA"],
+                "description": "Delete WPDA user",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Failed to delete WPDA",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "WPDA": {
+                                        "value": {
+                                            "success": "false",
+                                            "data": {
+                                                "message": "Failed to delete this WPDA"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Success to delete WPDA",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "WPDA": {
+                                        "value": {
+                                            "success": "true",
+                                            "data": {
+                                                "message": "Success to delete this WPDA"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,226 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Resources\UserResource;
+use App\Models\Profile;
+use App\Models\User;
+use App\Models\Wpda;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
+
+class AuthenticationController extends Controller
+{
+
+    public function googleLogin(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+        ]);
+
+        // Verifikasi token Google menggunakan library atau SDK yang sesuai
+        $googleUser = $this->verifyGoogleToken($request->token);
+
+        if (!$googleUser) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid Google token.',
+            ], 401);
+        }
+
+        // Cek apakah pengguna dengan email Google sudah terdaftar di sistem Anda
+        $user = User::where('email', $googleUser['email'])->first();
+
+        if (!$user) {
+            // Jika belum terdaftar, daftarkan pengguna baru atau sesuaikan sesuai kebutuhan Anda
+            $user = new User();
+            $user->full_name = $googleUser['name'];
+            $user->email = $googleUser['email'];
+            $user->save();
+        }
+
+        // Generate token untuk pengguna
+        $token = $user->createToken('token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login with Google successful',
+            'user' => new UserResource($user->loadMissing('userProfile')),
+            'token' => $token,
+        ]);
+    }
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email atau kata sandi tidak valid.'
+            ]);
+        }
+
+        if ($user->approval_status !== 'approved') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pengguna masih menunggu persetujuan. Harap menunggu persetujuan.'
+            ], 401); // Unauthorized
+        }
+
+        $token = $user->createToken('token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil masuk',
+            'user' => new UserResource($user->loadMissing('userProfile')),
+            'token' => $token,
+        ]);
+    }
+
+
+
+    public function register(Request $request)
+    {
+        $request->validate([
+            'full_name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if ($user !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email sudah terdaftar'
+            ]);
+        }
+
+        $user = new User();
+        $user->full_name = $request->input('full_name');
+        $user->email = $request->input('email');
+        $user->password = Hash::make($request->input('password'));
+
+        // Simpan pengguna ke dalam database
+        $user->save();
+
+        // Generate account number after saving the user
+        $accountId = str_pad($user->id, 5, '0', STR_PAD_LEFT);
+        $randomNumber = str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
+        $user->account_number = 'DG' . $accountId . $randomNumber;
+
+        // Update user with account number
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User registered successfully',
+            'data' => new UserResource($user),
+        ]);
+    }
+
+
+
+    public function getUsers()
+    {
+        $users = User::with('wpdaHistory')->get(); // Mengambil semua pengguna dengan history Wpda
+
+        $usersWithTotalWpda = $users->map(function ($user) {
+            $user['total_wpda'] = $user->wpdaHistory->count();
+            $user['missed_days_total'] = $user->profile->missed_days_total ?? 0; // Menambahkan missed_days_total ke respons
+            return $user;
+        });
+
+        $totalUser = User::count();
+
+        return response()->json([
+            'success' => true,
+            "message" =>  "User data with wpda history retrieved successfully",
+            'total_user' => $totalUser,
+            'users_data'  => UserResource::collection($usersWithTotalWpda->loadMissing('userProfile')),
+        ]);
+    }
+
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Logout successfully!'
+        ]);
+    }
+
+
+
+    public function deleteUser($userId)
+    {
+        $user = User::find($userId);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        // Hapus data wpda milik pengguna
+        Wpda::where('user_id', $userId)->delete();
+
+        // Hapus data profile pengguna
+        Profile::where('user_id', $userId)->delete();
+
+        // Hapus pengguna itu sendiri
+        $user->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pengguna dan semua data yang terkait dengan pengguna berhasil dihapus',
+        ]);
+    }
+
+    public function approve($id)
+    {
+
+
+        $user = User::findOrFail($id);
+
+        $user->approval_status = 'approved';
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status persetujuan berhasil diperbarui',
+            'data' => new UserResource($user),
+        ]);
+    }
+
+    public function getTotalUsers()
+    {
+        $totalUsers = User::count();
+
+        return response()->json([
+            'success' => true,
+            'total_user' => $totalUsers,
+        ]);
+    }
+
+    public function getTotalUsersWithWpda()
+    {
+        $totalUsersWithWpda = Wpda::distinct('user_id')->count('user_id');
+
+        return response()->json([
+            'success' => true,
+            'total_users_with_wpda' => $totalUsersWithWpda,
+        ]);
+    }
+}

@@ -1,0 +1,327 @@
+{
+    "openapi": "3.0.2",
+    "info": {
+        "title": "Profile API",
+        "description": "OpenAPI for GSJA Application",
+        "version": "1.0",
+        "contact": {
+            "name": "Rivaldo Siregar",
+            "email": "rvldsiregar@gmail.com"
+        }
+    },
+    "servers": [{ "url": "http://localhost:8000" }],
+    "paths": {
+        "/api/profile/{id}": {
+            "get": {
+                "summary": "Read User Profile",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Failed to get profile user",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "Profile": {
+                                        "value": {
+                                            "success": "false",
+                                            "data": {
+                                                "message": "Failed to get profile user"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Success to get profile user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "address": {
+                                            "type": "string"
+                                        },
+                                        "phone_number": {
+                                            "type": "string"
+                                        },
+                                        "gender": {
+                                            "type": "string"
+                                        },
+                                        "age": {
+                                            "type": "integer"
+                                        },
+                                        "birth_place": {
+                                            "type": "string"
+                                        },
+                                        "birth_date": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "examples": {
+                                    "Profile": {
+                                        "value": {
+                                            "success": "true",
+                                            "data": {
+                                                "id": "1",
+                                                "address": "Kost Griya Cendekia Surabaya",
+                                                "phone_number": "082197629818",
+                                                "gender": "Male",
+                                                "age": 21,
+                                                "birth_place": "Jayapura",
+                                                "birth_date": "05/03/2002"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create User Profile",
+                "description": "Create User Profile",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "User Rivaldo": {
+                                    "description": "Read profile Rivaldo",
+                                    "value": {
+                                        "address": "Kost Griya Cendekia Surabaya",
+                                        "phone_number": "082197629818",
+                                        "gender": "Male",
+                                        "age": 21,
+                                        "birth_place": "Jayapura",
+                                        "birth_date": "05/03/2002"
+                                    }
+                                }
+                            },
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "phone_number": {
+                                        "type": "string"
+                                    },
+                                    "gender": {
+                                        "type": "string"
+                                    },
+                                    "age": {
+                                        "type": "integer"
+                                    },
+                                    "birth_place": {
+                                        "type": "string"
+                                    },
+                                    "birth_date": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "400": {
+                        "description": "Failed to create user profile",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "User Rivaldo": {
+                                        "value": {
+                                            "success": "false",
+                                            "data": {
+                                                "message": "Failed to create user profile"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Success to create user profile",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "User Rivaldo": {
+                                        "value": {
+                                            "success": "true",
+                                            "data": {
+                                                "id": "1",
+                                                "address": "Kost Griya Cendekia Surabaya",
+                                                "phone_number": "082197629818",
+                                                "gender": "Male",
+                                                "age": 21,
+                                                "birth_place": "Jayapura",
+                                                "birth_date": "05/03/2002"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header"
+                    }
+                ],
+                "summary": "Update User Profile",
+                "description": "Update User Profile",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "User Rivaldo": {
+                                    "description": "Read profile Rivaldo",
+                                    "value": {
+                                        "address": "Kost Griya Cendekia Surabaya",
+                                        "phone_number": "082197629818",
+                                        "gender": "Male",
+                                        "age": 21,
+                                        "birth_place": "Jayapura",
+                                        "birth_date": "05/03/2002"
+                                    }
+                                }
+                            },
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "phone_number": {
+                                        "type": "string"
+                                    },
+                                    "gender": {
+                                        "type": "string"
+                                    },
+                                    "age": {
+                                        "type": "integer"
+                                    },
+                                    "birth_place": {
+                                        "type": "string"
+                                    },
+                                    "birth_date": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "400": {
+                        "description": "Failed to update user profile",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "User Rivaldo": {
+                                        "value": {
+                                            "success": "false",
+                                            "data": {
+                                                "message": "Failed to update user profile"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Success to update user profile",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "User Rivaldo": {
+                                        "value": {
+                                            "success": "true",
+                                            "data": {
+                                                "id": "1",
+                                                "address": "Kost Griya Cendekia Surabaya",
+                                                "phone_number": "082197629818",
+                                                "gender": "Male",
+                                                "age": 21,
+                                                "birth_place": "Jayapura",
+                                                "birth_date": "05/03/2002"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete User Profile",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Failed to delete user profile",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "User Rivaldo": {
+                                        "value": {
+                                            "success": "false",
+                                            "data": {
+                                                "message": "Failed to delete user profile"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Success to delete user profile",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "User Rivaldo": {
+                                        "value": {
+                                            "success": "true",
+                                            "data": {
+                                                "message": "Success to delete user profile"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
