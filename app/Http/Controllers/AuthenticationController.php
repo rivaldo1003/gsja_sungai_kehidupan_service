@@ -88,45 +88,45 @@ class AuthenticationController extends Controller
 
 
 
-    public function register(Request $request)
-    {
-        $request->validate([
-            'full_name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'password' => 'required|min:6',
-        ]);
+   public function register(Request $request)
+{
+    $request->validate([
+        'full_name' => 'required|string|max:255',
+        'email' => 'required|email',
+        'password' => 'required|min:6',
+    ]);
 
-        $user = User::where('email', $request->email)->first();
+    $user = User::where('email', $request->email)->first();
 
-        if ($user !== null) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Email sudah terdaftar'
-            ]);
-        }
-
-        $user = new User();
-        $user->full_name = $request->input('full_name');
-        $user->email = $request->input('email');
-        $user->password = Hash::make($request->input('password'));
-
-        // Simpan pengguna ke dalam database
-        $user->save();
-
-        // Generate account number after saving the user
-        $accountId = str_pad($user->id, 5, '0', STR_PAD_LEFT);
-        $randomNumber = str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
-        $user->account_number = 'DG' . $accountId . $randomNumber;
-
-        // Update user with account number
-        $user->save();
-
+    if ($user !== null) {
         return response()->json([
-            'success' => true,
-            'message' => 'User registered successfully',
-            'data' => new UserResource($user),
+            'success' => false,
+            'message' => 'Email sudah terdaftar'
         ]);
     }
+
+    $user = new User();
+    $user->full_name = $request->input('full_name');
+    $user->email = $request->input('email');
+    $user->password = Hash::make($request->input('password'));
+
+    // Save the user to the database
+    $user->save();
+
+    // Generate account number after saving the user
+    $accountId = str_pad($user->id, 4, '0', STR_PAD_LEFT);
+    $user->account_number = 'DG' . $accountId;
+
+    // Update user with account number
+    $user->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'User registered successfully',
+        'data' => new UserResource($user),
+    ]);
+}
+
 
 
 

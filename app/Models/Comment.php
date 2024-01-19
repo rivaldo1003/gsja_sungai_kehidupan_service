@@ -9,7 +9,7 @@ class Comment extends Model
 {
     protected $fillable = ['user_id', 'wpda_id', 'comments_content'];
 
-    public function comentator()
+    public function user()
     {
         return $this->belongsTo(User::class);
     }

@@ -39,9 +39,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // FILTER DATA WPDA
     Route::get('/wpda/history/filter/{id}/', [WpdaController::class, 'getWpdaByMonth']);
-
-    // COMMENT WPDA
+    
+     // COMMENT WPDA
     Route::post('/comments', [CommentController::class, 'store']);
+    Route::delete('/comments/delete/{id}', [CommentController::class, 'deleteComment']);
 
 
     // USER API
@@ -49,6 +50,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/approve/{id}', [AuthenticationController::class, 'approve']);
     Route::delete('/user/logout', [AuthenticationController::class, 'logout']);
     Route::delete('/user/delete/{id}', [AuthenticationController::class, 'deleteUser']);
+    
+    Route::put('/users/{userId}/update-full-name', [UserController::class, 'updateFullName']);
+    
 
     Route::get('/users/monthly-data', [UserController::class, 'getMonthlyDataForAllUsers']);
 
@@ -57,6 +61,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/profile', [UserProfileController::class, 'index']);
     Route::put('/profile/update/{id}', [UserProfileController::class, 'updateProfile']);
     Route::delete('/profile/delete/{id}', [UserProfileController::class, 'deleteProfile']);
+    Route::get('/user-gender-total', [UserProfileController::class, 'getUserGenderTotal']);
 
 
     // PROFILE PICTURE API
@@ -64,6 +69,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/users/{userId}/upload-profile-picture', [UserProfileController::class, 'uploadProfilePicture']);
     Route::get('/users/{userId}/profile-picture', [UserProfileController::class, 'getProfilePicture']);
     Route::delete('/users/{userId}/delete-profile-picture', [UserProfileController::class, 'deleteProfilePicture']);
+    
+    
+    
 
     Route::get('/users/{userId}', [UserController::class, 'show']);
     Route::get('/total-users', [UserController::class, 'getTotalUsers']);

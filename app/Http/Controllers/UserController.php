@@ -11,6 +11,8 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 
+
+
 class UserController extends Controller
 {
     public function show($userId)
@@ -28,6 +30,32 @@ class UserController extends Controller
             'data' => new UserDetailResource($user),
         ]);
     }
+
+    public function updateFullName(Request $request, $userId)
+    {
+        $request->validate([
+            'full_name' => 'required|string|max:255',
+        ]);
+
+        $user = User::find($userId);
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $user->full_name = $request->input('full_name');
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Nama lengkap berhasil diperbarui',
+            'user' => $user,
+        ]);
+    }
+
+
+
+
 
     public function getTotalUsers()
     {

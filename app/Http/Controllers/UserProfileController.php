@@ -166,86 +166,109 @@ class UserProfileController extends Controller
         ]);
     }
 
-    public function uploadProfilePicture(Request $request, $userId)
+public function uploadProfilePicture(Request $request, $userId)
+{
+    $request->validate([
+        'profile_picture' => 'required|file|max:2048',
+    ]);
+
+    $user = User::findOrFail($userId);
+
+    if ($request->hasFile('profile_picture')) {
+        $profilePicture = $request->file('profile_picture');
+
+        // Check the file size before processing
+        $fileSize = $profilePicture->getSize(); // Get file size in bytes
+        $maxFileSize = 2048; // Maximum file size in kilobytes (2MB)
+
+        if ($fileSize > $maxFileSize * 1024) {
+            return response()->json(['message' => 'File size exceeds the limit of 2048 KB'], 400);
+        }
+
+        $filename = 'user_' . $userId . '.' . $profilePicture->getClientOriginalExtension();
+        $path = $request->file('profile_picture')->storeAs('public/profile_pictures', $filename);
+
+        // Pastikan profile sudah ada atau buat baru jika belum
+        $profile = $user->userProfile ?? new Profile();
+        $profile->profile_picture = $path;
+        $profile->save();
+
+        // Ubah path gambar profil menjadi URL lengkap
+        $profilePictureUrl = url('/storage/' . $path);
+
+        return response()->json(['profile_picture_url' => $profilePictureUrl]);
+    }
+
+    return response()->json(['message' => 'Failed to upload profile picture'], 500);
+}
+
+
+
+
+public function getProfilePicture($userId)
+{
+    $user = User::findOrFail($userId);
+
+    // Ubah ini sesuai dengan hubungan yang tepat antara User dan Profile
+    $profile = $user->userProfile;
+
+    if ($profile && $profile->profile_picture) {
+        // Menggunakan fungsi url untuk menghasilkan URL dengan path yang diinginkan
+        $path = url('storage/profile_pictures/user_' . $userId . '.' . pathinfo($profile->profile_picture, PATHINFO_EXTENSION));
+        $pathWithoutPublic = str_replace('public/', '', $path);
+        return response()->json(['profile_picture' => $pathWithoutPublic]);
+    }
+
+    return response()->json(['message' => 'Profile picture not found'], 404);
+}
+
+
+
+
+
+   public function deleteProfilePicture($userId)
+{
+    $user = User::findOrFail($userId);
+
+    // Ubah ini sesuai dengan hubungan yang tepat antara User dan Profile
+    $profile = $user->userProfile;
+
+    if ($profile && $profile->profile_picture) {
+        $picturePath = $profile->profile_picture;
+
+        // Hapus gambar profil dari disk 'public'
+        if (Storage::disk('public')->exists($picturePath)) {
+            Storage::disk('public')->delete($picturePath);
+        }
+
+        // Hapus symlink
+        $symlinkPath = public_path('storage/profile_pictures');
+        if (is_link($symlinkPath)) {
+            unlink($symlinkPath);
+        }
+
+        // Hapus path gambar profil pada model Profile
+        $profile->profile_picture = null;
+        $profile->save();
+
+        return response()->json(['success' => true, 'message' => 'Gambar profil berhasil dihapus']);
+    }
+
+    return response()->json(['success' => false, 'message' => 'Profile picture not found'], 404);
+}
+ public function getUserGenderTotal()
     {
-        $request->validate([
-            'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        $totalMaleUsers = Profile::where('gender', 'Laki-Laki')->count();
+        $totalFemaleUsers = Profile::where('gender', 'Perempuan')->count();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_male_users' => $totalMaleUsers,
+            'total_female_users' => $totalFemaleUsers,]
         ]);
-
-        $user = User::findOrFail($userId);
-
-        if ($request->hasFile('profile_picture')) {
-            $profilePicture = $request->file('profile_picture');
-            $filename = 'user_' . $userId . '.' . $profilePicture->getClientOriginalExtension();
-            $path = $request->file('profile_picture')->storeAs('public/profile_pictures', $filename);
-
-
-            // Pastikan profile sudah ada atau buat baru jika belum
-            $profile = $user->userProfile ?? new Profile();
-            $profile->profile_picture = $path;
-            $profile->save();
-
-            // Ubah path gambar profil menjadi URL lengkap
-            $profilePictureUrl = url('/storage/' . $path);
-
-            return response()->json(['profile_picture_url' => $profilePictureUrl]);
-        }
-
-        return response()->json(['message' => 'Failed to upload profile picture'], 500);
     }
 
 
 
-
-    public function getProfilePicture($userId)
-    {
-        $user = User::findOrFail($userId);
-
-        // Ubah ini sesuai dengan hubungan yang tepat antara User dan Profile
-        $profile = $user->userProfile;
-
-        if ($profile && $profile->profile_picture) {
-            // Menggunakan fungsi url untuk menghasilkan URL dengan path yang diinginkan
-            $path = url('storage/profile_pictures/user_' . $userId . '.' . pathinfo($profile->profile_picture, PATHINFO_EXTENSION));
-            $pathWithoutPublic = str_replace('public/', '', $path);
-            return response()->json(['profile_picture' => $pathWithoutPublic]);
-        }
-
-        return response()->json(['message' => 'Profile picture not found'], 404);
-    }
-
-
-
-
-
-    public function deleteProfilePicture($userId)
-    {
-        $user = User::findOrFail($userId);
-
-        // Ubah ini sesuai dengan hubungan yang tepat antara User dan Profile
-        $profile = $user->userProfile;
-
-        if ($profile && $profile->profile_picture) {
-            $picturePath = $profile->profile_picture;
-
-            // Hapus gambar profil dari disk 'public'
-            if (Storage::disk('public')->exists($picturePath)) {
-                Storage::disk('public')->delete($picturePath);
-            }
-
-            // Hapus symlink
-            $symlinkPath = public_path('storage/profile_pictures');
-            if (is_link($symlinkPath)) {
-                unlink($symlinkPath);
-            }
-
-            // Hapus path gambar profil pada model Profile
-            $profile->profile_picture = null;
-            $profile->save();
-
-            return response()->json(['success' => true, 'message' => 'Gambar profil berhasil dihapus']);
-        }
-
-        return response()->json(['success' => false, 'message' => 'Profile picture not found'], 404);
-    }
 }

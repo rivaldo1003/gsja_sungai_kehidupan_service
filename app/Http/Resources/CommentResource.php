@@ -8,19 +8,20 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class CommentResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(Request $request): array
+    public function toArray($request)
     {
         return [
             'id' => $this->id,
-            'comments_content' => $this->comments_content,
+            'wpda_id' => $this->wpda_id,
             'user_id' => $this->user_id,
-            'comentator' => $this->whenLoaded('comentator'),
-            'created_at' => Carbon::parse($this->created_at)->format('Y-m-d H:i:s'),
+            'comments_content' => $this->comments_content, // Pastikan ini sesuai dengan nama kolom di model komentar Anda
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
+            'user' => [
+                'id' => $this->user->id,
+                'full_name' => $this->user->full_name, // Ganti dengan nama atribut yang sesuai di model User
+                'email' => $this->user->email, // Ganti dengan nama atribut yang sesuai di model User
+                  'profile_picture' => str_replace('public/', '', $this->user->userProfile->profile_picture), // Menggunakan URL yang sudah ada tanpa 'public'
+            ],
         ];
     }
 }

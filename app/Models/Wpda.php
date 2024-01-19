@@ -20,6 +20,7 @@ class Wpda extends Model
         "message_of_god",
         "application_in_life",
         "likes",
+        "doa_tabernakel"
     ];
 
 
@@ -27,8 +28,6 @@ class Wpda extends Model
     {
         return $this->belongsTo(User::class, "user_id", "id");
     }
-
-
 
     public function likers()
     {
@@ -51,4 +50,10 @@ class Wpda extends Model
         $this->total_likes -= 1;
         $this->save();
     }
+    
+      public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+    
 }

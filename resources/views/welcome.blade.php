@@ -18,14 +18,14 @@ header img {
     height: auto;
     display: block;
     margin: auto;
-    background: transparent; 
+    background: transparent; /* Atur latar belakang gambar menjadi transparan. */
 }
 
 body {
     font-family: 'Helvetica Neue', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: transparent; 
+    background-color: transparent; /* Hilangkan latar belakang putih pada body. */
 }
         nav {
             background-color: #333;
