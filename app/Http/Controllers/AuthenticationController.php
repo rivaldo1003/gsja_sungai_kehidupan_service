@@ -7,10 +7,7 @@ use App\Models\Profile;
 use App\Models\User;
 use App\Models\Wpda;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Str;
 
 class AuthenticationController extends Controller
 {
@@ -222,5 +219,9 @@ class AuthenticationController extends Controller
             'success' => true,
             'total_users_with_wpda' => $totalUsersWithWpda,
         ]);
+    }
+
+    public function test()
+    {
     }
 }
