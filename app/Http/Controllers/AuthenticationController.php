@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Hash;
 class AuthenticationController extends Controller
 {
 
+
+    // Function Login with Google
     public function googleLogin(Request $request)
     {
         $request->validate([
