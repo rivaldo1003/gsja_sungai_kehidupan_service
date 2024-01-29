@@ -13,7 +13,7 @@ class AuthenticationController extends Controller
 {
 
 
-    // Function Login with Google Tes Terbaru
+    // Function Login with Google Tes Terbaru Aldo
     public function googleLogin(Request $request)
     {
         $request->validate([
