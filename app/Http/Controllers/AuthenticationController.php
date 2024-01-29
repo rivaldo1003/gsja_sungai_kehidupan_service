@@ -13,7 +13,7 @@ class AuthenticationController extends Controller
 {
 
 
-    // Function Login with Google
+    // Function Login with Google Tes Terbaru
     public function googleLogin(Request $request)
     {
         $request->validate([
@@ -155,7 +155,7 @@ class AuthenticationController extends Controller
         $request->user()->currentAccessToken()->delete();
         return response()->json([
             'success' => true,
-            'message' => 'Logout successfully!'
+            'message' => 'Anda berhasil keluar'
         ]);
     }
 
