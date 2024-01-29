@@ -178,7 +178,7 @@
 
 <body>
     <header>
-        <h1>GSJA Sungai Kehidupan</h1>
+        <h1>GSJA Sungai Kehidupan Surabaya</h1>
     </header>
     <nav>
         <a href="#home">Home</a>
