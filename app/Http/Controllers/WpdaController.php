@@ -12,6 +12,8 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class WpdaController extends Controller
 {
@@ -70,6 +72,9 @@ class WpdaController extends Controller
 
         $wpda->save();
 
+        // Mengirim notifikasi ke pengguna lain
+        $this->sendNotificationToOtherUsers($user_id);
+
         $wpdaResource = new WpdaResource($wpda->loadMissing('writer:id,full_name,email'));
 
         return response()->json([
@@ -77,6 +82,40 @@ class WpdaController extends Controller
             'message' => 'WPDA berhasil dibuat',
             'data' => $wpdaResource,
         ]);
+    }
+
+    private function sendNotificationToOtherUsers($userId)
+    {
+        // Mendapatkan nama pengguna yang membuat WPDA
+        $user = Auth::user()->full_name;
+
+        // Mendapatkan semua pengguna kecuali pengguna yang membuat WPDA
+        $otherUsers = User::where('id', '!=', $userId)->get();
+
+        // Mengirim notifikasi kepada semua pengguna kecuali pengguna yang membuat WPDA
+        foreach ($otherUsers as $user) {
+            // Mendapatkan token FCM pengguna
+            $fcmToken = $user->fcm_token;
+
+            // Mengirim notifikasi menggunakan Firebase Cloud Messaging
+            $response = Http::withHeaders([
+                'Authorization' => 'key=' . env('FIREBASE_SERVER_KEY'),
+                'Content-Type' => 'application/json',
+            ])->post('https://fcm.googleapis.com/fcm/send', [
+                'to' => $fcmToken,
+                'notification' => [
+                    'title' => 'New Status Uploaded',
+                    'body' => $user . ' uploaded a new status!',
+                ],
+            ]);
+
+            // Cek jika pengiriman notifikasi berhasil atau tidak
+            if ($response->successful()) {
+                Log::info('Notification sent to user ' . $user->id);
+            } else {
+                Log::error('Failed to send notification to user ' . $user->id);
+            }
+        }
     }
 
     public function getByUserId($userId)

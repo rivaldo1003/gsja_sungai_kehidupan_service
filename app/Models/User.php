@@ -22,8 +22,8 @@ class User extends Authenticatable
         "full_name",
         "email",
         "profile_picture",
-        "verified"
-      
+        "verified",
+
     ];
 
     public function wpdaHistory()

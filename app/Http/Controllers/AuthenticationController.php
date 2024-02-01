@@ -11,9 +11,6 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthenticationController extends Controller
 {
-
-
-    // Function Login with Google Tes Terbaru Aldo hallo Guys
     public function googleLogin(Request $request)
     {
         $request->validate([
@@ -85,8 +82,6 @@ class AuthenticationController extends Controller
         ]);
     }
 
-
-
     public function register(Request $request)
     {
         $request->validate([
@@ -121,13 +116,10 @@ class AuthenticationController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'User registered successfully',
+            'message' => 'Pengguna berhasil mendaftar',
             'data' => new UserResource($user),
         ]);
     }
-
-
-
 
     public function getUsers()
     {
