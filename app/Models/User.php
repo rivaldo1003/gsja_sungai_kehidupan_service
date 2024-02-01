@@ -23,7 +23,7 @@ class User extends Authenticatable
         "email",
         "profile_picture",
         "verified",
-
+        "device_token"
     ];
 
     public function wpdaHistory()
