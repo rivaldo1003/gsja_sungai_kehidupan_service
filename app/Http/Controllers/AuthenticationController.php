@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
+use App\Models\Comment;
 use App\Models\Profile;
 use App\Models\User;
 use App\Models\Wpda;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthenticationController extends Controller
@@ -82,6 +84,45 @@ class AuthenticationController extends Controller
         ]);
     }
 
+    function saveSubscriptionId(Request $request, $id)
+    {
+        $request->validate([
+            'device_token' => 'required',
+        ]);
+
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        // Memeriksa apakah pengguna terotentikasi
+        if (Auth::check()) {
+            // Memeriksa apakah pengguna terotentikasi adalah pengguna yang ingin disimpan device token-nya
+            if ($user->id !== Auth::user()->id) {
+                return response()->json([
+                    'message' => 'You are not authorized to send subscription id to this user'
+                ], 403);
+            }
+        } else {
+            // Jika pengguna tidak terotentikasi, kembalikan respons 401 Unauthorized
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $user->device_token = $request->device_token;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Subscription id berhasil dikirim',
+            'data' => new UserResource($user),
+        ]);
+    }
+
     public function register(Request $request)
     {
         $request->validate([
@@ -144,12 +185,20 @@ class AuthenticationController extends Controller
 
     public function logout(Request $request)
     {
+        // Hapus access token saat ini
         $request->user()->currentAccessToken()->delete();
+
+        // Hapus device_token
+        $user = $request->user();
+        $user->device_token = null;
+        $user->save();
+
         return response()->json([
             'success' => true,
             'message' => 'Anda berhasil keluar'
         ]);
     }
+
 
 
 
@@ -161,14 +210,23 @@ class AuthenticationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'User not found',
+
             ], 404);
         }
+        // Hapus semua komentar yang terkait dengan wpda yang dimiliki oleh pengguna
+        Comment::whereIn('wpda_id', function ($query) use ($userId) {
+            $query->select('id')
+                ->from('wpdas')
+                ->where('user_id', $userId);
+        })->delete();
 
         // Hapus data wpda milik pengguna
         Wpda::where('user_id', $userId)->delete();
 
         // Hapus data profile pengguna
         Profile::where('user_id', $userId)->delete();
+
+
 
         // Hapus pengguna itu sendiri
         $user->delete();
@@ -178,6 +236,7 @@ class AuthenticationController extends Controller
             'message' => 'Pengguna dan semua data yang terkait dengan pengguna berhasil dihapus',
         ]);
     }
+
 
     public function approve($id)
     {

@@ -29,6 +29,7 @@ class UserResource extends JsonResource
             'approval_status' => $this->approval_status,
             'total_wpda' => $this->total_wpda,
             'account_number' => $this->account_number,
+            'device_token' => $this->device_token,
             'profile' => new ProfileResource($this->whenLoaded('userProfile')),
             'wpda_history' => new ProfileResource($this->whenLoaded('wpdaHistory')),
 

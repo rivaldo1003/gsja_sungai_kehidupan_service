@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Wpda;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -19,7 +20,7 @@ class WpdaController extends Controller
 {
     public function index()
     {
-        $wpda = Wpda::with('writer:id,full_name,email')->get();
+        $wpda = Wpda::with('writer:id,full_name,email,device_token')->get();
 
         return response()->json([
             'success' => true,
@@ -72,10 +73,10 @@ class WpdaController extends Controller
 
         $wpda->save();
 
-        // Mengirim notifikasi ke pengguna lain
+        // // Mengirim notifikasi ke pengguna lain
         $this->sendNotificationToOtherUsers($user_id);
 
-        $wpdaResource = new WpdaResource($wpda->loadMissing('writer:id,full_name,email'));
+        $wpdaResource = new WpdaResource($wpda->loadMissing('writer:id,full_name,email,device_token'));
 
         return response()->json([
             'success' => true,
@@ -84,39 +85,68 @@ class WpdaController extends Controller
         ]);
     }
 
-    private function sendNotificationToOtherUsers($userId)
+    public function sendNotificationToOtherUsers($userId)
     {
-        // Mendapatkan nama pengguna yang membuat WPDA
-        $user = Auth::user()->full_name;
+        try {
+            // Mendapatkan nama lengkap pengguna
+            $fullName = User::find($userId)->full_name;
 
-        // Mendapatkan semua pengguna kecuali pengguna yang membuat WPDA
-        $otherUsers = User::where('id', '!=', $userId)->get();
-
-        // Mengirim notifikasi kepada semua pengguna kecuali pengguna yang membuat WPDA
-        foreach ($otherUsers as $user) {
-            // Mendapatkan token FCM pengguna
-            $fcmToken = $user->fcm_token;
-
-            // Mengirim notifikasi menggunakan Firebase Cloud Messaging
-            $response = Http::withHeaders([
-                'Authorization' => 'key=' . env('FIREBASE_SERVER_KEY'),
-                'Content-Type' => 'application/json',
-            ])->post('https://fcm.googleapis.com/fcm/send', [
-                'to' => $fcmToken,
-                'notification' => [
-                    'title' => 'New Status Uploaded',
-                    'body' => $user . ' uploaded a new status!',
-                ],
-            ]);
-
-            // Cek jika pengiriman notifikasi berhasil atau tidak
-            if ($response->successful()) {
-                Log::info('Notification sent to user ' . $user->id);
-            } else {
-                Log::error('Failed to send notification to user ' . $user->id);
+            // Pastikan pengguna dengan ID yang diberikan ada
+            if (!$fullName) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found'
+                ], 404);
             }
+
+            // Mendapatkan token perangkat dari pengguna lain
+            $otherUsersTokens = User::where('id', '!=', $userId)
+                ->whereNotNull('device_token')
+                ->pluck('device_token')
+                ->toArray();
+
+            // Kirim notifikasi ke setiap token perangkat
+            $client = new Client();
+            foreach ($otherUsersTokens as $token) {
+                $response = $client->post('https://onesignal.com/api/v1/notifications', [
+                    'headers' => [
+                        'Authorization' => 'Basic OGRhZTY2M2YtMDNjOC00YTU2LTgyYzEtNzY4YzA2OWZiMDk0',
+                        'Content-Type' => 'application/json',
+                    ],
+                    'json' => [
+                        'app_id' => 'ae235573-b52c-44a5-b2c3-23d9de4232fa',
+                        'include_player_ids' => [$token],
+                        'contents' => [
+                            'en' => "$fullName mengunggah WPDA baru. Lihat sekarang",
+                        ],
+                    ],
+                ]);
+
+                // Cetak token perangkat yang dikirim notifikasi
+                Log::info('Notification sent to user with token: ' . $token);
+
+                // Periksa respons status kode
+                if ($response->getStatusCode() != 200) {
+                    Log::error('Failed to send notification to user with token: ' . $token);
+                    // Anda dapat menambahkan penanganan kesalahan lainnya di sini jika diperlukan
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification sent successfully',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error sending notification: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error sending notification: ' . $e->getMessage(),
+            ], 500);
         }
     }
+
+
+
 
     public function getByUserId($userId)
     {
