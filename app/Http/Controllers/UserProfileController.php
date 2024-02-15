@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\ProfileResource;
+use App\Models\Partner;
 use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -49,9 +50,10 @@ class UserProfileController extends Controller
                 'message' => 'User not found'
             ], 404);
         }
+
         if ($user->id !== Auth::user()->id) {
             return response()->json([
-                'message' => 'You are not authorized to create profile this user'
+                'message' => 'You are not authorized to create profile for this user'
             ], 403);
         }
 
@@ -60,19 +62,10 @@ class UserProfileController extends Controller
                 'success' => false,
                 'message' => 'Sorry, your profile is completed',
             ]);
-        } else {
-            $profile = new Profile();
-            $profile->address = $request->address;
-            $profile->phone_number = $request->phone_number;
-            $profile->gender = $request->gender;
-            $profile->age = $request->age;
-            $profile->birth_place = $request->birth_place;
-            $profile->birth_date = $request->birth_date;
-            $profile->user_id = Auth::user()->id;
-            $profile->save();
         }
 
-
+        // Create the user's profile
+        $profile = new Profile();
         $profile->address = $request->address;
         $profile->phone_number = $request->phone_number;
         $profile->gender = $request->gender;
@@ -82,16 +75,24 @@ class UserProfileController extends Controller
         $profile->user_id = Auth::user()->id;
         $profile->save();
 
-        // Set kolom profile_completed menjadi 1 setelah profil dibuat
+        // Set the user's profile_completed to 1 after the profile is created
         $user->profile_completed = 1;
         $user->save();
 
-        $profileCompleted = $user->profile_completed;
+        // If partner information is provided, create partner profile
+        if ($request->filled('partner_name') || $request->filled('children_count')) {
+            $partner = new Partner();
+            $partner->user1_id = Auth::user()->id;
+            $partner->partner_name = $request->input('partner_name');
+            $partner->children_count = $request->input('children_count', 0); // default value 0 if not provided
+            $partner->save();
+        }
 
+        // Return response
         return response()->json([
             'success' => true,
-            'profile_completed' => $profileCompleted,
-            'message' => 'Profil berhasil dibuat',
+            'profile_completed' => $user->profile_completed,
+            'message' => 'Profile successfully created',
             'data' => new ProfileResource($profile),
         ]);
     }
