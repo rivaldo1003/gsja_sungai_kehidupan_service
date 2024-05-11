@@ -4,12 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\UserDetailResource;
 use App\Http\Resources\UserResource;
+use App\Models\PasswordReset;
 use App\Models\Profile;
 use App\Models\User;
 use App\Models\Wpda;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
 
 
 // Halo
@@ -17,7 +23,7 @@ class UserController extends Controller
 {
     public function show($userId)
     {
-        $user = User::with('userProfile')->find($userId);
+        $user = User::with(['userProfile', 'partner'])->find($userId);
 
         if (!$user) {
             return response()->json([
@@ -30,6 +36,7 @@ class UserController extends Controller
             'data' => new UserDetailResource($user),
         ]);
     }
+
 
     public function updateFullName(Request $request, $userId)
     {
@@ -52,10 +59,6 @@ class UserController extends Controller
             'user' => $user,
         ]);
     }
-
-
-
-
 
     public function getTotalUsers()
     {
@@ -169,5 +172,157 @@ class UserController extends Controller
             'success' => true,
             'data' => $monthlyData,
         ]);
+    }
+
+    public function sendVerifyEmail($email)
+    {
+        if (auth()->user()) {
+            $user =   User::where('email', $email)->get();
+            if (count($user) > 0) {
+
+
+                $random =  Str::random(40);
+                $domain = URL::to('/');
+                $url = $domain . '/verify-mail/' . $random;
+
+                $data['url'] = $url;
+                $data['email'] = $email;
+                $data['title'] = "Email Verification";
+                $data['body'] = "Please click here to below to verify your mail.";
+                Mail::send('verifyMail', ['data' => $data], function ($message) use ($data) {
+                    $message->to($data['email'])->subject($data['title']);
+                });
+
+
+                $user = User::find($user[0]['id']);
+                $user->remember_token = $random;
+                $user->save();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Mail sent successfully',
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User is not found!',
+                ]);
+            }
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'User is not Authenticated',
+            ]);
+        }
+    }
+
+    public function verificationMail($token)
+    {
+        $user = User::where('remember_token', $token)->get();
+        if (count($user) > 0) {
+            $dateTime = Carbon::now()->format('Y-m-d H:i:s');
+            $user = User::find($user[0]['id']);
+            $user->remember_token = '';
+            $user->verified = 1;
+            $user->email_verified_at = $dateTime;
+            $user->save();
+
+            return view('success_verified_email');
+        } else {
+            return view('404');
+        }
+    }
+
+    public function forgetPassword(Request $request)
+    {
+        try {
+            $user = User::where('email', $request->email)->get();
+            if (count($user) > 0) {
+                $token = Str::random(40);
+                $domain = URL::to('/');
+                $url = $domain . '/reset-password?token=' . $token;
+
+                $data['url'] = $url;
+                $data['email'] = $request->email;
+                $data['title'] = "Password Reset";
+                $data['body'] = "Please click on below link to reset you password.";
+
+                Mail::send('forgetPasswordMail', ['data' => $data], function ($message) use ($data) {
+                    $message->to($data['email'])->subject($data['title']);
+                });
+                $dateTime =  Carbon::now()->format('Y-m-d H:i:s');
+                PasswordReset::updateOrCreate(
+                    ['email' => $request->email],
+                    [
+                        'email' => $request->email,
+                        'token' => $token,
+                        'created_at' => $dateTime,
+                    ],
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Please check your mail to reset your password.',
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found!',
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function resetPasswordLoad(Request $request)
+    {
+        // Ambil data reset password berdasarkan token dari database
+        $resetData = PasswordReset::where('token', $request->token)->first();
+
+        // Periksa apakah token ada dan data reset password ditemukan
+        if ($resetData) {
+            // Ambil data pengguna berdasarkan email yang ditemukan di data reset password
+            $user = User::where('email', $resetData->email)->first();
+
+            // Periksa apakah pengguna ditemukan
+            if ($user) {
+                // Jika pengguna ditemukan, tampilkan halaman reset password
+                return view('resetPassword', compact('user'));
+            }
+        }
+
+        // Jika token tidak ditemukan atau data pengguna tidak ditemukan, arahkan ke halaman 404
+        return view('404');
+    }
+
+    // Password Reset Functionality
+    // Password Reset Functionality
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        // Ambil user berdasarkan ID yang diberikan
+        $user = User::find($request->id);
+
+        // Periksa apakah user ditemukan
+        if ($user) {
+            // Hash atau enkripsi password baru sebelum disimpan
+            $user->password = Hash::make($request->password);
+            $user->save();
+
+            // Hapus semua token reset password yang terkait dengan email pengguna
+            PasswordReset::where('email', $user->email)->delete();
+
+            // Tampilkan pesan berhasil
+            return "<h1>Your password has been reset successfully.</h1>";
+        } else {
+            // Tampilkan halaman 404 jika user tidak ditemukan
+            abort(404);
+        }
     }
 }

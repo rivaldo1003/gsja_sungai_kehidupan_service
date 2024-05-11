@@ -18,9 +18,10 @@ use Illuminate\Support\Facades\Log;
 
 class WpdaController extends Controller
 {
+
     public function index()
     {
-        $wpda = Wpda::with('writer:id,full_name,email,device_token')->get();
+        $wpda = Wpda::with('writer:id,full_name,email,device_token,ministry')->get();
 
         return response()->json([
             'success' => true,
@@ -144,9 +145,6 @@ class WpdaController extends Controller
             ], 500);
         }
     }
-
-
-
 
     public function getByUserId($userId)
     {
@@ -433,9 +431,6 @@ class WpdaController extends Controller
         ]);
     }
 
-
-
-
     private function getGrade($missedDays)
     {
         if ($missedDays < 4) {
@@ -445,5 +440,27 @@ class WpdaController extends Controller
         } else {
             return 'C';
         }
+    }
+
+
+    public function getWpdaObedEdom()
+    {
+        // Cari ID pengguna dengan field ministry yang sesuai dengan "Obed Edom"
+        $users = User::where('ministry', 'obed-edom')->pluck('id');
+
+        // Cari WPDA yang dimiliki oleh pengguna dengan field ministry "Obed Edom" dan urutkan berdasarkan tanggal terbaru
+        $wpda = Wpda::whereIn('user_id', $users)
+            ->with('writer:id,full_name,email,device_token,ministry')
+            ->orderBy('created_at', 'desc') // Mengurutkan berdasarkan tanggal terbaru
+            ->get();
+
+        // Hitung total WPDA keseluruhan
+        $totalWpda = $wpda->count();
+
+        return response()->json([
+            'success' => true,
+            'total_wpda' => $totalWpda, // Menambahkan total WPDA keseluruhan ke respons JSON
+            'data' => WpdaResource::collection($wpda->loadMissing('comments')),
+        ]);
     }
 }

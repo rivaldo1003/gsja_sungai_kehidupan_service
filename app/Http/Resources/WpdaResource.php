@@ -40,6 +40,7 @@ class WpdaResource extends JsonResource
                 'email' => $this->writer->email,
                 'device_token' => $this->writer->device_token,
                 'profile_picture' => $profilePictureWithoutPublic,
+                'ministry' => $this->writer->ministry,
             ],
             'comments' => $comments,
         ];

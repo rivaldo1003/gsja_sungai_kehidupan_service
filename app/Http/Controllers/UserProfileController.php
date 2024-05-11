@@ -88,14 +88,25 @@ class UserProfileController extends Controller
             $partner->save();
         }
 
-        // Return response
+        // Get partner information
+        $partnerData = null;
+        if (isset($partner)) {
+            $partnerData = [
+                'partner_name' => $partner->partner_name,
+                'children_count' => $partner->children_count,
+            ];
+        }
+
+        // Return response with partner information
         return response()->json([
             'success' => true,
             'profile_completed' => $user->profile_completed,
-            'message' => 'Profile successfully created',
+            'message' => 'Profile pengguna berhasil dibuat',
             'data' => new ProfileResource($profile),
+            'partner' => $partnerData,
         ]);
     }
+
 
     public function updateProfile(Request $request, $userId)
     {
@@ -117,6 +128,7 @@ class UserProfileController extends Controller
         $allowedFields = ['address', 'phone_number', 'gender', 'age', 'birth_place', 'birth_date'];
         $requestData = $request->only($allowedFields);
 
+        // Update profile data
         try {
             $profile->update($requestData);
         } catch (\Exception $e) {
@@ -126,12 +138,23 @@ class UserProfileController extends Controller
             ]);
         }
 
+        // Update or create partner data
+        $partnerData = $request->only(['partner_name', 'children_count']);
+        $partner = Partner::where('user1_id', $userId)->first();
+        if (!$partner) {
+            $partner = new Partner();
+            $partner->user1_id = $userId;
+        }
+        $partner->fill($partnerData);
+        $partner->save();
+
         return response()->json([
             'success' => true,
             'message' => 'Profil pengguna berhasil diperbarui',
             'data' => new ProfileResource($profile),
         ]);
     }
+
 
 
 

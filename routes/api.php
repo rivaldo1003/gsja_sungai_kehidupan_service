@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\LikeController;
+use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\WpdaController;
@@ -18,6 +20,10 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+
+Route::post('/forget-password', [UserController::class, 'forgetPassword']);
+
 
 Route::post('/login', [AuthenticationController::class, 'login']);
 Route::post('/google-login', [AuthenticationController::class, 'googleLogin']);
@@ -43,6 +49,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // FILTER DATA WPDA
     Route::get('/wpda/history/filter/{id}/', [WpdaController::class, 'getWpdaByMonth']);
+    Route::get('/wpda/obed-edom', [WpdaController::class, 'getWpdaObedEdom']);
+
 
     // COMMENT WPDA
     Route::post('/comments', [CommentController::class, 'store']);
@@ -87,4 +95,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     //Verified Email
     Route::post('/verify-user', [UserController::class, 'verifyUser']);
+    Route::get('/send-verify-mail/{email}', [UserController::class, 'sendVerifyEmail']);
 });

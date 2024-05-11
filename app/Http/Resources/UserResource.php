@@ -22,6 +22,7 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'full_name' => $this->full_name,
             'email' => $this->email,
+            'ministry' => $this->ministry,
             'verified' => $this->verified,
             'created_at' => $formattedDate,
             'role' => $this->role,
@@ -30,6 +31,10 @@ class UserResource extends JsonResource
             'total_wpda' => $this->total_wpda,
             'account_number' => $this->account_number,
             'device_token' => $this->device_token,
+            'partner' => $this->partner ? [
+                'partner_name' => $this->partner->partner_name,
+                'children_count' => $this->partner->children_count,
+            ] : null,
             'profile' => new ProfileResource($this->whenLoaded('userProfile')),
             'wpda_history' => new ProfileResource($this->whenLoaded('wpdaHistory')),
 

@@ -23,7 +23,9 @@ class User extends Authenticatable
         "email",
         "profile_picture",
         "verified",
-        "device_token"
+        "device_token",
+        "email_verified_at",
+        "ministry",
     ];
 
     public function wpdaHistory()
@@ -39,5 +41,10 @@ class User extends Authenticatable
     public function likes()
     {
         return $this->belongsToMany(Wpda::class, 'likes');
+    }
+    // Definisikan relasi dengan Partner
+    public function partner()
+    {
+        return $this->hasOne(Partner::class, 'user1_id');
     }
 }

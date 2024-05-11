@@ -157,7 +157,7 @@ class AuthenticationController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Pengguna berhasil mendaftar',
+            'message' => 'Pengguna berhasil mendaftar. Tunggu persetujuan masuk dari Admin.',
             'data' => new UserResource($user),
         ]);
     }
